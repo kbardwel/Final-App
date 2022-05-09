@@ -1,0 +1,93 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tsibble)
+library(fpp3)
+library(fable)
+
+```
+
+
+
+```{r cars}
+data_url <- "https://docs.google.com/spreadsheets/d/1s7LfGmAv7EvpqEMe2RHcSPPKSNnBj8HmnvaDDd3A6Yw/export?format=csv"
+
+hotels <- read.csv(data_url)
+
+hotels %>% mutate(month = yearmonth(month)) ->hotels
+TShotels<-as_tsibble(hotels)
+TShotels %>% autoplot()
+
+###PLOTS
+
+#seasonality
+TShotels%>% gg_season()
+#decomp
+TShotels %>%
+  model(
+    classical_decomposition(revenue)
+  ) %>%
+  components() %>%
+  autoplot()
+#auto
+TShotels %>% autoplot(revenue)
+
+
+#OTHER 
+
+
+#interpretations
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+#New modeling requirements
+#Simple Models: (1) Naive, (2) Seasonal Naive, (3) Mean, & (4) Drift
+#Exponential smoothing: (1) Holts & (2) Holts/Winters
+#ARIMA: (1) Manually selected parameters & (2) Auto selected parameters
+
+#Naive
+Naive<- TShotels %>% model(NAIVE(revenue))
+
+#Seasonal Naive
+SNaive<- TShotels %>% model(SNAIVE(revenue))
+
+#Mean
+Meanm<- TShotels %>% model(MEAN(revenue))
+
+#Drift
+Drift<- TShotels %>% model(NAIVE(revenue ~ drift))
+
+#Holts
+TShotels %>%
+  model(
+    `Holt's method` = ETS(revenue ~ error("A") +
+                       trend("A") + season("N"))
+#Holts/Winters
+TShotels %>%
+  model(
+    additive = ETS(revenue ~ error("A") + trend("A") +
+                                                season("A")),
+    multiplicative = ETS(revenue ~ error("M") + trend("A") +
+                                                season("M"))
+  )
+#ARIMA Manual
+TShotels %>% model(ARIMA(revenue~pdq(2,1,0)))
+
+#ARIMA Selected
+TShotels %>% model(ARIMA(revenue))
+
+
+#interpretations
+```
+
