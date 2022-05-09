@@ -25,18 +25,18 @@ TShotels %>% autoplot()
 ###PLOTS###
 
 #seasonality
-TShotels%>% gg_season()
+SeasonalPlot<-{TShotels%>% gg_season()}
 #decomp
-TShotels %>%
+Decomposition<-{TShotels %>%
   model(
     classical_decomposition(revenue)
   ) %>%
   components() %>%
-  autoplot()
+  autoplot()}
 #auto
-TShotels %>%
+AutocorrelationPlot<-{TShotels %>%
   ACF(revenue) %>%
-  autoplot()
+  autoplot()}
 #OTHER 
 
 
@@ -62,42 +62,42 @@ You can also embed plots, for example:
 #ARIMA: (1) Manually selected parameters & (2) Auto selected parameters
 
 #Naive
-Naive<- TShotels %>% model(NAIVE(revenue))
-  Naive%>% forecast %>% autoplot(TShotels)
+NPlot<- {Naive<- TShotels %>% model(NAIVE(revenue))
+  Naive%>% forecast %>% autoplot(TShotels)}
 
 #Seasonal Naive
-SNaive<- TShotels %>% model(SNAIVE(revenue))
-SNaive%>% forecast %>% autoplot(TShotels)
+SNPlot<- {SNaive<- TShotels %>% model(SNAIVE(revenue))
+SNaive%>% forecast %>% autoplot(TShotels)}
 #Mean
-Meanm<- TShotels %>% model(MEAN(revenue))
-Meanm%>% forecast %>% autoplot(TShotels)
+MeanPlot<- {Meanm<- TShotels %>% model(MEAN(revenue))
+Meanm%>% forecast %>% autoplot(TShotels)}
 
 #Drift
-Drift<- TShotels %>% model(RW(revenue ~ drift()))
-Drift%>% forecast %>% autoplot(TShotels)
+DriftPlot<- {Drift<- TShotels %>% model(RW(revenue ~ drift()))
+Drift%>% forecast %>% autoplot(TShotels)}
 
 #Holts
-Hfit<-TShotels %>%
+HPlot<- {Hfit<-TShotels %>%
   model(`Holt's method` = ETS(revenue ~ error("A") +
                        trend("A") + season("N")))
-Hfit%>% forecast %>% autoplot(TShotels)
+Hfit%>% forecast %>% autoplot(TShotels)}
 #Holts/Winters
-HW<-TShotels %>%
+HWPlot<- {HW<-TShotels %>%
   model(
     additive = ETS(revenue ~ error("A") + trend("A") +
                                                 season("A")),
     multiplicative = ETS(revenue ~ error("M") + trend("A") +
                                                 season("M"))
   )
-HW%>% forecast %>% autoplot(TShotels)
+HW%>% forecast %>% autoplot(TShotels)}
 
 #ARIMA Manual
-Arimafit<-TShotels %>% model(ARIMA(revenue~pdq(2,1,0)))
-Arimafit %>% forecast %>% autoplot(TShotels)
+ARIMAMPlot<- {Arimafit<-TShotels %>% model(ARIMA(revenue~pdq(2,1,0)))
+Arimafit %>% forecast %>% autoplot(TShotels)}
 #ARIMA Selected
-ArimaSfit<-TShotels %>% model(ARIMA(revenue))
+ARIMASPlot<- {ArimaSfit<-TShotels %>% model(ARIMA(revenue))
 
-ArimaSfit %>% forecast %>% autoplot(TShotels)
+ArimaSfit %>% forecast %>% autoplot(TShotels)}
 
 
 #interpretations
@@ -118,5 +118,6 @@ ArimaSfit %>% forecast %>% autoplot(TShotels)
 
 #8. ARIMA Selected: This model has a wider confidence interval than our ARIMA Manual, but this model does predict very well and takes into consideration our seasonality and upward trending data.
 
+MeanPlot
 ```
 
