@@ -1,0 +1,123 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tsibble)
+library(fpp3)
+library(fable)
+
+```
+
+
+
+```{r cars}
+data_url <- "https://docs.google.com/spreadsheets/d/1s7LfGmAv7EvpqEMe2RHcSPPKSNnBj8HmnvaDDd3A6Yw/export?format=csv"
+
+hotels <- read.csv(data_url)
+
+hotels %>% mutate(month = yearmonth(month)) ->hotels
+TShotels<-as_tsibble(hotels)
+TShotels %>% autoplot()
+
+###PLOTS###
+
+#seasonality
+SeasonalPlot<-{TShotels%>% gg_season()}
+#decomp
+Decomposition<-{TShotels %>%
+  model(
+    classical_decomposition(revenue)
+  ) %>%
+  components() %>%
+  autoplot()}
+#auto
+AutocorrelationPlot<-{TShotels %>%
+  ACF(revenue) %>%
+  autoplot()}
+#OTHER 
+
+
+#interpretations
+#1. Seasonality: When we look at the seasonality plot, we see that there are clear dips and peaks. In the Month of Parch we have our larger peaks and in the summer month we see our larger dips along with December. Overall this plot shows that we do see seasonality in our data.
+
+#2. Decomposition: Our classical decomposition models show our upward trending data that is greatly seasonal.
+
+#3. Autocorrelation: Our autocorrelation plot shows both trend and seasonality. The decrease in ACF as lag increases shows the trend and the scalloped shapes at the top indicating the seasonality if the data.
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+####FORECASTING MODELS####
+
+#New modeling requirements
+#Simple Models: (1) Naive, (2) Seasonal Naive, (3) Mean, & (4) Drift
+#Exponential smoothing: (1) Holts & (2) Holts/Winters
+#ARIMA: (1) Manually selected parameters & (2) Auto selected parameters
+
+#Naive
+NPlot<- {Naive<- TShotels %>% model(NAIVE(revenue))
+  Naive%>% forecast %>% autoplot(TShotels)}
+
+#Seasonal Naive
+SNPlot<- {SNaive<- TShotels %>% model(SNAIVE(revenue))
+SNaive%>% forecast %>% autoplot(TShotels)}
+#Mean
+MeanPlot<- {Meanm<- TShotels %>% model(MEAN(revenue))
+Meanm%>% forecast %>% autoplot(TShotels)}
+
+#Drift
+DriftPlot<- {Drift<- TShotels %>% model(RW(revenue ~ drift()))
+Drift%>% forecast %>% autoplot(TShotels)}
+
+#Holts
+HPlot<- {Hfit<-TShotels %>%
+  model(`Holt's method` = ETS(revenue ~ error("A") +
+                       trend("A") + season("N")))
+Hfit%>% forecast %>% autoplot(TShotels)}
+#Holts/Winters
+HWPlot<- {HW<-TShotels %>%
+  model(
+    additive = ETS(revenue ~ error("A") + trend("A") +
+                                                season("A")),
+    multiplicative = ETS(revenue ~ error("M") + trend("A") +
+                                                season("M"))
+  )
+HW%>% forecast %>% autoplot(TShotels)}
+
+#ARIMA Manual
+ARIMAMPlot<- {Arimafit<-TShotels %>% model(ARIMA(revenue~pdq(2,1,0)))
+Arimafit %>% forecast %>% autoplot(TShotels)}
+#ARIMA Selected
+ARIMASPlot<- {ArimaSfit<-TShotels %>% model(ARIMA(revenue))
+
+ArimaSfit %>% forecast %>% autoplot(TShotels)}
+
+
+#interpretations
+
+#1. Naive: the classic naive model does not seem to predict very well as our 95% confidence interval is quite wide. This is not our best forecasting model.
+
+#2. Seasonal Naive: Our Seasonal Naive model predicts much better than the classic. This shows a less wide confidence interval with a seasonality that we obviously have in our data.
+
+#3. Mean: Our mean model is not reasonable for our data. We have upward trending data that is not being taken into consideration. 
+
+#4. Drift: Our drift model does seem to recognize the upward trend in in data, but it doesn't help forecast considering seasonality.
+
+#5. Holts: Our holts model is accurate to give us an upward trending forecast, but it disregards our seasonality, but our confidence intervals help us cover the seasonality.
+
+#6. Holts Winters: Our Holts Winters model does a great job of showing both our upward trending data as well as seasonality in this forecast.
+
+#7. ARIMA Manual: This is a great model that continues seasonality and the upward trend in the forecast with a realatively small confidence interval.
+
+#8. ARIMA Selected: This model has a wider confidence interval than our ARIMA Manual, but this model does predict very well and takes into consideration our seasonality and upward trending data.
+
+MeanPlot
+```
+
